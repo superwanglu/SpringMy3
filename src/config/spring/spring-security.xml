@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+	xmlns:beans="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+	http://www.springframework.org/schema/beans/spring-beans-3.0.xsd 
+	http://www.springframework.org/schema/security 
+	http://www.springframework.org/schema/security/spring-security-3.1.xsd">
+
+
+    <!-- 开发环境可以放置 <debug /> 配置，会输出详细Security处理日志，正式环境建议屏蔽 <debug /> 配置 
+    <debug />-->
+    <http pattern="/login.jsp" security="none" />
+    <http pattern="/LoginSys/login.html" security="none" />
+    <http pattern="/LoginSys/timeOut.html" security="none" />    
+    <http pattern="/LoginSys/loginCheck.html" security="none"/>    
+     
+	<!--
+		use-expressions="true" 的意思是开启表达式
+		access-denied-page的意思是，当验证权限失败后会跳转到的页面
+	-->
+	<http use-expressions="true" auto-config="false" entry-point-ref="myAuthenticationEntryPoint" access-denied-page="/denied.jsp">
+      
+        <!-- 以上未列出的，也都必须验证才能访问 -->
+        <intercept-url pattern="/LoginSys/**" access="isAuthenticated()" />
+        <logout logout-success-url="/j_spring_security_logout" logout-url="/LoginSys/login.html" invalidate-session="true" delete-cookies="JSESSIONID"/>
+        
+        <!--
+        session超时跳转页面 以及每用户可拥有的session最大个数 
+        	如果每次退出后，必须要求用户必须重开浏览器才能登录，可以将 invalid-session-url="/logout.jsp"，
+        	防止有些 Web 应用把用户的会话标识符直接通过 URL 的参数来传递        
+        -->
+        <!-- 会话管理 -->
+		<session-management invalid-session-url="/LoginSys/timeOut.html" session-fixation-protection="none">
+			<concurrency-control max-sessions="1"
+				error-if-maximum-exceeded="true" />
+		</session-management>
+	</http>
+
+ <!-- 未登录的切入点 -->
+    <beans:bean id="myAuthenticationEntryPoint" class="org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint">
+        <beans:property name="loginFormUrl" value="/LoginSys/login.html"></beans:property>
+    </beans:bean>
+    
+	<authentication-manager alias="myAuthenticationManager">
+		<authentication-provider user-service-ref="myUserDetailService" />
+	</authentication-manager> 
+	
+</beans:beans>
